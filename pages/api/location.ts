@@ -1,3 +1,4 @@
+export const runtime = 'edge';
 import { headers } from "next/headers";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
