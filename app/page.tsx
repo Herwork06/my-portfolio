@@ -1,7 +1,6 @@
 "use client"
 import GlobeCanvas, { locationToAngles } from "@/components/cobe";
 import { Marker } from "cobe";
-import Image from "next/image";
 import { useEffect } from "react";
 
 declare global {
