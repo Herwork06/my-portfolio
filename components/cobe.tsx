@@ -41,7 +41,7 @@ export default function GlobeCanvas({ scale, markers, focus = [0, 0] }: { scale:
       phi: 0,
       theta: 0,
       dark: 1,
-      diffuse: 1.2,
+      diffuse: 5.0,
       mapSamples: 15000,
       mapBrightness: 6,
       scale: typeof scale === "number" && !isNaN(scale) ? scale : 1,
@@ -99,8 +99,7 @@ return <div style={{
         contain: 'layout paint size',
         opacity: 0,
         transition: 'opacity 1s ease',
-      }}
-      
+      }}    
     />
   </div>
 }

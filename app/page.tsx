@@ -3,6 +3,8 @@
 import { Marker } from "cobe";
 import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
+import { animate, useAnimate } from "motion/react"
+import { TextAnimate } from "@/components/magicui/text-animate";
 
 const GlobeCanvas = dynamic(() => import("../components/cobe"), {
   loading: () => <p>Loading...</p>,
@@ -19,7 +21,7 @@ declare global {
 
 const locationToAngles = (lat: number, long: number) => {
   console.log([Math.PI - ((long * Math.PI) / 180 - Math.PI / 2), (lat * Math.PI) / 180])
-  return [Math.PI - ((long * Math.PI) / 180 - Math.PI / 2), (lat * Math.PI) / 180]
+  return [Math.PI - ((long * Math.PI) / 180 - Math.PI / 2), (lat * Math.PI) / 180] as [number, number]
 }
 
 const sleep = async (time: number) => {
@@ -30,14 +32,17 @@ export default function Home() {
   const [points, setPoints] = useState<Marker[]>([])
   const [focus, setFocus] = useState<[number, number]>([0, 0])
   const [connectionText, setText] = useState("Connecting")
-
+  const [showConnect, setShow1] = useState(true)
+  const [showTitle, setShow2] = useState(false)
+  const [scope] = useAnimate()
+  const [boxScope] = useAnimate()
   useEffect(() => {
     const fetchLocation = async () => {
       const res = await fetch("/api/location");
       const geo = await res.json();
       setPoints([...points, {location: [geo.lat, geo.long], size: 0.03, color: [0, 1, 0]} as Marker])
       await sleep(1000)
-      const angles = locationToAngles(geo.lat, geo.long) as [number, number]
+      const angles = locationToAngles(geo.lat, geo.long)
       setFocus(angles)
     };
     fetchLocation();
@@ -45,22 +50,56 @@ export default function Home() {
     const animateGlobe = async () => {
       await sleep(5000)
       setText("Connected")
-      const angles = locationToAngles(69.6652886, 18.9068629) as [number, number]
+      const angles = locationToAngles(69.6652886, 18.9068629)
       setFocus(angles)
+      await sleep(3200)
+      setShow1(false)
+      const offsetAngle = locationToAngles(41.962636589216004, 19.23933678586917)
+      setFocus(offsetAngle)
+      await animate([
+        [scope.current, { y: -150, scale: 0.8 }],
+        [boxScope.current, { y: -180, opacity: 1 }]
+      ])
+      setShow2(true)
     }
 
     animateGlobe()
 
+
   }, []);
   return (
     <div className="flex w-full h-full justify-center items-center" suppressHydrationWarning>
-      <div className="absolute top-52 left-1/2 -translate-x-1/2 text-center z-10">
-        <h1 className="text-4xl font-bold">{connectionText}</h1>
+
+      {showConnect ? (
+        <div className="absolute top-52 left-1/2 -translate-x-1/2 text-center z-20">
+          <h1 className="text-4xl font-bold">{connectionText}</h1>
+        </div>
+
+      ) : (
+        <p></p>
+      )}
+      <div className="relative w-full h-h-full z-30">
+         <div className="relative flex w-full h-lvh justify-center items-center z-30">
+            {showTitle && (
+              <TextAnimate
+                animation="fadeIn"
+                by="character"
+                as="h1"
+                className="text-5xl font-light"
+                startOnView
+              >
+                FULL STACK DEVELOPER
+              </TextAnimate>
+            )}
+          </div>
+          <div ref={boxScope} className="fixed w-full h-full bg-zinc-950 top-7/10 opacity-0 blur-3xl"/>
+
       </div>
 
-      <div className="absolute w-[60%] top-3/10">
+      <div ref={scope} className="absolute w-[60%] top-3/10 z-10">
         <GlobeCanvas scale={1} markers={points} focus={focus}/>
       </div>
+
       <div
         style={{
           position: "absolute",
