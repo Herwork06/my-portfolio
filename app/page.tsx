@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 "use client"
 import { Marker } from "cobe";
 import dynamic from "next/dynamic";
@@ -56,9 +57,9 @@ export default function Home() {
       <div className="absolute top-52 left-1/2 -translate-x-1/2 text-center z-10">
         <h1 className="text-4xl font-bold">{connectionText}</h1>
       </div>
-      <div className="absolute w-[60%] top-3/10">
-      <GlobeCanvas scale={1} markers={points} focus={focus}/>
 
+      <div className="absolute w-[60%] top-3/10">
+        <GlobeCanvas scale={1} markers={points} focus={focus}/>
       </div>
       <div
         style={{
