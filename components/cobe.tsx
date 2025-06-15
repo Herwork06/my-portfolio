@@ -1,22 +1,27 @@
-/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable react-hooks/exhaustive-deps */
 "use client";
 
-import createGlobe from "cobe";
+import createGlobe, { Marker } from "cobe";
 import { useRef, useEffect } from "react";
 
 
-export const locationToAngles = (lat: number, long: number) => {
-  return [Math.PI - ((long * Math.PI) / 180 - Math.PI / 2), (lat * Math.PI) / 180]
-}
-
-
-export default function GlobeCanvas({ scale }: {scale: number}) {
+export default function GlobeCanvas({ scale, markers, focus = [0, 0] }: { scale: number, markers: Marker[], focus?: [number, number] }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
-  const focusRef = useRef([0, 0])
+  const focusRef = useRef(focus);
   useEffect(() => {
+    focusRef.current = focus;
+  }, [focus]);
 
+
+
+  const globeRef = useRef<any>(null);
+  const markersRef = useRef<Marker[]>(markers);
+  useEffect(() => {
+    markersRef.current = markers;
+  }, [markers]);
+  useEffect(() => {
     if(!canvasRef.current) return;
 
     let width = 0;
@@ -37,36 +42,38 @@ export default function GlobeCanvas({ scale }: {scale: number}) {
       theta: 0,
       dark: 1,
       diffuse: 1.2,
-      mapSamples: 16000,
+      mapSamples: 15000,
       mapBrightness: 6,
       scale: typeof scale === "number" && !isNaN(scale) ? scale : 1,
       baseColor: [0.3, 0.3, 0.3],
       markerColor: [0.1, 0.8, 1],
       glowColor: [1, 1, 1],
       markers: [
-
+        
       ],
       onRender: (state) => {
-      state.phi = currentPhi
-      state.theta = currentTheta
-      const [focusPhi, focusTheta] = focusRef.current
-      const distPositive = (focusPhi - currentPhi + doublePi) % doublePi
-      const distNegative = (currentPhi - focusPhi + doublePi) % doublePi
-      // Control the speed
-      if (distPositive < distNegative) {
-        currentPhi += distPositive * 0.08
-      } else {
-        currentPhi -= distNegative * 0.08
-      }
-      currentTheta = currentTheta * 0.92 + focusTheta * 0.08
-      state.width = width * 2
-      state.height = width * 2
+        state.phi = currentPhi
+        state.theta = currentTheta
+        const [focusPhi, focusTheta] = focusRef.current
+        const distPositive = (focusPhi - currentPhi + doublePi) % doublePi
+        const distNegative = (currentPhi - focusPhi + doublePi) % doublePi
+        // Control the speed
+        if (distPositive < distNegative) {
+          currentPhi += distPositive * 0.08
+        } else {
+          currentPhi -= distNegative * 0.08
+        }
+        currentTheta = currentTheta * 0.92 + focusTheta * 0.08
+        state.width = width * 2
+        state.height = width * 2
+
+        markersRef.current.push({location: [69.6652886, 18.9068629], size: 0.04, color: [1, 1, 1]})
+        state.markers = markersRef.current
+
       }
     });
-
-    // Export globe instance for external use (example: attach to window)
-    (window as any).__cobeGlobe__ = globe;
-    
+    globeRef.current = globe;
+    console.log('globe', canvasRef.current);
     setTimeout(() => {
       if(!canvasRef.current) return;
       canvasRef.current.style.opacity = '1'
@@ -75,7 +82,8 @@ export default function GlobeCanvas({ scale }: {scale: number}) {
       globe.destroy();
       window.removeEventListener('resize', onResize);
     }
-  }, [])
+  }, []);
+
 
 return <div style={{
     width: '100%',
@@ -92,6 +100,7 @@ return <div style={{
         opacity: 0,
         transition: 'opacity 1s ease',
       }}
+      
     />
   </div>
 }

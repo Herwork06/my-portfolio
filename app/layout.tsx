@@ -1,15 +1,20 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Red_Hat_Display, Red_Hat_Mono, Red_Hat_Text } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const redHatDisplay = Red_Hat_Display({
+  variable: "--font-redhat-display",
   subsets: ["latin"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const redHatMono = Red_Hat_Mono({
+  variable: "--font-redhat-mono",
+  subsets: ["latin"],
+});
+
+const redHatText = Red_Hat_Text({
+  variable: "--font-redhat-text",
   subsets: ["latin"],
 });
 
@@ -26,12 +31,14 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased overflow-hidden`}
+        className={`${redHatDisplay.variable} ${redHatMono.variable} ${redHatText.variable} antialiased overflow-hidden`}
       >
           <ThemeProvider
             attribute="class"
             defaultTheme="dark"
             disableTransitionOnChange
+            forcedTheme="dark"
+            
           >
             {children}
           </ThemeProvider>

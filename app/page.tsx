@@ -1,7 +1,12 @@
 "use client"
-import GlobeCanvas, { locationToAngles } from "@/components/cobe";
 import { Marker } from "cobe";
-import { useEffect } from "react";
+import dynamic from "next/dynamic";
+import { useEffect, useState } from "react";
+
+const GlobeCanvas = dynamic(() => import("../components/cobe"), {
+  loading: () => <p>Loading...</p>,
+  ssr: false
+})
 
 declare global {
   interface Window {
@@ -11,24 +16,48 @@ declare global {
   }
 }
 
-  const fetchLocation = async () => {
-    const res = await fetch("/api/location");
-    const geo = await res.json();
-    if (window.__codeCobe__?.markers) {
-      window.__codeCobe__.markers.push({location: [geo.lat, geo.long], size: 0.1})
-    }
-    locationToAngles(geo.lat, geo.long)
-  };
-export default function Home() {
-  useEffect(() => {
+const locationToAngles = (lat: number, long: number) => {
+  console.log([Math.PI - ((long * Math.PI) / 180 - Math.PI / 2), (lat * Math.PI) / 180])
+  return [Math.PI - ((long * Math.PI) / 180 - Math.PI / 2), (lat * Math.PI) / 180]
+}
 
+const sleep = async (time: number) => {
+  return await new Promise((resolve) => setTimeout(resolve, time));
+}
+
+export default function Home() {
+  const [points, setPoints] = useState<Marker[]>([])
+  const [focus, setFocus] = useState<[number, number]>([0, 0])
+  const [connectionText, setText] = useState("Connecting")
+
+  useEffect(() => {
+    const fetchLocation = async () => {
+      const res = await fetch("/api/location");
+      const geo = await res.json();
+      setPoints([...points, {location: [geo.lat, geo.long], size: 0.03, color: [0, 1, 0]} as Marker])
+      await sleep(1000)
+      const angles = locationToAngles(geo.lat, geo.long) as [number, number]
+      setFocus(angles)
+    };
     fetchLocation();
     
+    const animateGlobe = async () => {
+      await sleep(5000)
+      setText("Connected")
+      const angles = locationToAngles(69.6652886, 18.9068629) as [number, number]
+      setFocus(angles)
+    }
+
+    animateGlobe()
+
   }, []);
   return (
-    <div className="flex w-full h-full justify-center items-center">
+    <div className="flex w-full h-full justify-center items-center" suppressHydrationWarning>
+      <div className="absolute top-52 left-1/2 -translate-x-1/2 text-center z-10">
+        <h1 className="text-4xl font-bold">{connectionText}</h1>
+      </div>
       <div className="absolute w-[60%] top-3/10">
-      <GlobeCanvas scale={1} />
+      <GlobeCanvas scale={1} markers={points} focus={focus}/>
 
       </div>
       <div
@@ -43,8 +72,8 @@ export default function Home() {
           overflow: "hidden",
         }}
       >
-        {[...Array(100)].map((_, i) => {
-          const size = Math.random() * 2 + 1;
+        {[...Array(300)].map((_, i) => {
+          const size = Math.random() * 0.7 + 0.3; // Smaller stars: 0.3px to 1px
           const top = Math.random() * 100;
           const left = Math.random() * 100;
           const opacity = Math.random() * 0.5 + 0.5;
@@ -60,7 +89,7 @@ export default function Home() {
             borderRadius: "50%",
             background: "white",
             opacity,
-            boxShadow: `0 0 ${size * 1}px ${size}px white`,
+            boxShadow: `0 0 ${size * 2}px ${size}px white`,
           }}
         />
           );
